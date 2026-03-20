@@ -8,7 +8,9 @@
 ## Оглавление
 
 1. [Принципы работы агентов](#1-принципы-работы-агентов)
-2. [Карта агентов](#2-карта-агентов)
+2. [ИИ инфраструктура](#2-ии-инфраструктура)
+   - [Карта агентов](#21-карта-агентов)
+   - [Карта скиллов](#22-карта-скиллов)
 3. [Фаза 0 — Инфраструктура и scaffolding](#фаза-0--инфраструктура-и-scaffolding)
 4. [Фаза 1 — Аутентификация и RBAC](#фаза-1--аутентификация-и-rbac)
 5. [Фаза 2 — Загрузка и индексация документов](#фаза-2--загрузка-и-индексация-документов)
@@ -29,7 +31,9 @@
 
 ---
 
-## 2. Карта агентов
+## 2. ИИ инфраструктура
+
+## 2.1 Карта агентов
 
 | Агент | Зона ответственности |
 |-------|----------------------|
@@ -42,6 +46,20 @@
 
 ---
 
+## 2.2 Карта скиллов
+
+| Агент | Навыки и технологии |
+|-------|---------------------|
+| **Infra Agent** | Docker, Docker Compose, GitHub Actions / GitLab CI, PostgreSQL (миграции, расширения), Redis, переменные окружения, npm workspaces |
+| **Backend Agent** | Node.js 20, Express 4, TypeORM 0.3, TypeScript, REST API, JWT, bcrypt, multer, AWS SDK v3, Zod валидация, Pino логирование |
+| **AI Agent** | Python/Node.js для ML, pgvector, векторный поиск (cosine similarity), cross-encoder реранкинг, чанкинг (sliding window, структурный), tiktoken, OpenAI API, Anthropic API, Voyage AI API |
+| **Worker Agent** | BullMQ 5.x, Redis queues, фоновая обработка, retry logic с backoff, обработка PDF (pdf-parse), DOCX (mammoth), stream processing |
+| **Frontend Agent** | React 19, TypeScript, Vite 5, React Router v6, Zustand, TanStack Query, Tailwind CSS, shadcn/ui, react-markdown, CodeMirror 6, SSE (Server-Sent Events) |
+| **QA Agent** | Jest / Vitest (unit), Supertest (integration), Playwright (e2e), mock сервисы, тест-планы, OWASP Top 10 чеклисты, k6 (нагрузочное тестирование) |
+
+---
+
+
 ## Фаза 0 — Инфраструктура и scaffolding
 
 > **Цель:** команда может запустить весь стек одной командой; базовый CI проходит.
@@ -50,12 +68,12 @@
 **Агент:** Infra Agent
 
 - Инициализировать monorepo: `apps/api`, `apps/web`, `packages/shared`.
-- Настроить `pnpm workspaces` (или `npm workspaces`).
+- Настроить `npm workspaces`.
 - Добавить `tsconfig.json` с path aliases для каждого workspace.
 - Настроить ESLint + Prettier с общим конфигом.
 - Добавить `.gitignore`, `README.md` с инструкцией по запуску.
 
-**Результат:** `pnpm install` отрабатывает без ошибок; линтер запускается.
+**Результат:** `npm install` отрабатывает без ошибок; линтер запускается.
 
 ---
 

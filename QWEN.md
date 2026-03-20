@@ -44,7 +44,7 @@
 | **Database** | PostgreSQL 16 + pgvector |
 | **Queue** | BullMQ 5.x + Redis |
 | **Storage** | AWS S3 / S3-compatible |
-| **AI** | Provider-agnostic (OpenAI / Anthropic support) |
+| **AI** | Provider-agnostic |
 
 ### Key Features
 
