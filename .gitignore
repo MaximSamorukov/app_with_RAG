@@ -23,4 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-server/*
+# Server build artifacts (but not source code)
+server/api/dist/
+server/worker/dist/
+server/node_modules/

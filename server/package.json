@@ -1,0 +1,40 @@
+{
+  "name": "rag-assistant-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RAG Assistant Backend Server - Monorepo",
+  "scripts": {
+    "install:all": "npm install && npm run install:api && npm run install:worker",
+    "install:api": "cd api && npm install",
+    "install:worker": "cd worker && npm install",
+    "build": "npm run build:api && npm run build:worker",
+    "build:api": "cd api && npm run build",
+    "build:worker": "cd worker && npm run build",
+    "dev:api": "cd api && npm run dev",
+    "dev:worker": "cd worker && npm run dev",
+    "lint": "npm run lint:api && npm run lint:worker",
+    "lint:api": "cd api && npm run lint",
+    "lint:worker": "cd worker && npm run lint",
+    "typecheck": "npm run typecheck:api && npm run typecheck:worker",
+    "typecheck:api": "cd api && npm run typecheck",
+    "typecheck:worker": "cd worker && npm run typecheck",
+    "migration:run": "cd api && npm run migration:run",
+    "migration:generate": "cd api && npm run migration:generate",
+    "migration:revert": "cd api && npm run migration:revert"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "api",
+    "worker"
+  ],
+  "keywords": [
+    "rag",
+    "ai",
+    "chat",
+    "knowledge-base"
+  ],
+  "author": "",
+  "license": "MIT"
+}
