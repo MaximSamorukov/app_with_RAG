@@ -199,7 +199,7 @@ For implementing this project, the following specialized agent roles are defined
 |-------|----------------|
 | **Infra Agent** | Docker, CI/CD, environment setup, migrations |
 | **Backend Agent** | Node.js, Express, TypeORM, services, controllers |
-| **AI Agent** | AI adapters (embedding, completion), RAG pipeline, chunking |
+| **AI Agent** | AI adapters (embedding, completion), RAG pipeline, chunking, provider-agnostic integration |
 | **Worker Agent** | BullMQ workers, background processing, retry logic |
 | **Frontend Agent** | React components, routing, state management |
 | **QA Agent** | Unit, integration, and E2E tests |
@@ -209,7 +209,8 @@ For implementing this project, the following specialized agent roles are defined
 - **Single active session** per user (enforced at database level)
 - **200 message limit** per chat session (auto-rotate with notification)
 - **One active instruction** at a time (system prompt for RAG)
-- **Provider-agnostic AI**: Supports OpenAI and Anthropic via adapter pattern
+- **Provider-agnostic AI**: Supports any provider via adapter interface (OpenAI, Anthropic, Ollama, vLLM, custom)
 - **Hybrid chunking**: Structural chunking for DOCX/MD, sliding window for PDF
 - **Vector search**: pgvector with HNSW index, cosine similarity, threshold 0.75
 - **Reranking**: Cross-encoder reranking (top-20 → top-5)
+- **Embedding dimensions**: Configurable via settings (default 1536 for OpenAI-compatible)

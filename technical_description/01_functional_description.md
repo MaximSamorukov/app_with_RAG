@@ -178,12 +178,47 @@
 
 ```typescript
 interface AIProvider {
+  name: string;  // идентификатор провайдера
   generateEmbedding(text: string): Promise<number[]>
   generateCompletion(messages: Message[], options: CompletionOptions): AsyncIterable<string>
+  getEmbeddingDimensions(): number  // размерность вектора для pgvector
 }
 ```
 
-`AIProviderFactory.create(primary, fallback?)` — интерфейс предусматривает fallback (реализация post-MVP). Система поддерживает один активный провайдер; multi-provider failover — за рамками текущей версии.
+**Фабрика провайдеров:**
+
+```typescript
+interface AIProviderConfig {
+  provider: 'openai' | 'anthropic' | 'custom'
+  apiKey?: string
+  endpointUrl?: string  // для custom-провайдеров
+  embeddingModel: string
+  completionModel: string
+  embeddingDimensions: number
+  temperature: number
+}
+
+class AIProviderFactory {
+  static create(config: AIProviderConfig): AIProvider
+}
+```
+
+**Поддерживаемые конфигурации:**
+
+| Тип | Примеры | Настройка |
+|-----|---------|-----------|
+| **Cloud SaaS** | OpenAI, Anthropic, Google Vertex | `AI_PROVIDER=<name>`, `AI_API_KEY` |
+| **OpenAI-compatible** | vLLM, Ollama, LocalAI, FastChat | `AI_ENDPOINT_URL`, `AI_API_KEY` |
+| **Custom** | Собственная реализация | Адаптер по интерфейсу `AIProvider` |
+
+**Миграция между провайдерами:**
+
+1. Изменение настроек в админ-панели (`/admin/settings`)
+2. Проверка совместимости размерности эмбеддингов
+3. Если размерность отличается — предупреждение: «Требуется переиндексация всех документов»
+4. После переиндексации — обновление `settings.embedding_dimensions`
+
+Система поддерживает **один активный провайдер** одновременно. Multi-provider failover — за рамками текущей версии.
 
 ### 5.3 Обработка ошибок и UX-состояния
 

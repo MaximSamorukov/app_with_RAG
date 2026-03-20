@@ -97,10 +97,30 @@
 
 ### 3.2 AI-адаптеры
 
-| Провайдер | Эмбеддинги | Генерация |
-|-----------|------------|-----------|
-| OpenAI | text-embedding-3-small | gpt-4o-mini / gpt-4o |
-| Anthropic | voyage-3 (через Voyage AI) | claude-3-5-haiku / claude-3-7-sonnet |
+Система использует **provider-agnostic архитектуру** — поддержка любого AI-провайдера через адаптер.
+
+| Интерфейс | Описание | Требуемые параметры |
+|-----------|----------|---------------------|
+| `generateEmbedding(text: string)` | Генерация векторного представления | `embedding_dimensions: number` |
+| `generateCompletion(messages, options)` | Стриминговая генерация ответа | `temperature: number` |
+| `getEmbeddingDimensions()` | Размерность вектора (для pgvector) | — |
+
+**Поддерживаемые конфигурации:**
+
+| Тип | Примеры провайдеров | Конфигурация |
+|-----|---------------------|--------------|
+| **Cloud SaaS** | OpenAI, Anthropic, Google Vertex | `AI_PROVIDER=<name>`, `API_KEY` |
+| **OpenAI-compatible** | vLLM, Ollama, LocalAI | `AI_ENDPOINT_URL`, `AI_API_KEY` |
+| **Custom** | Собственная реализация | Адаптер по интерфейсу |
+
+**Рекомендуемые модели (настраиваемо):**
+
+| Категория | Модель | Размерность | Обоснование |
+|-----------|--------|-------------|-------------|
+| Embedding (small) | text-embedding-3-small / аналоги | 1536 | Баланс скорости/качества |
+| Embedding (multi) | multilingual-e5-large / аналоги | 1024 | Поддержка RU/EN |
+| Completion (fast) | gpt-4o-mini / claude-3-haiku / аналоги | — | Низкая задержка |
+| Completion (quality) | gpt-4o / claude-3-sonnet / аналоги | — | Высокое качество |
 
 ### 3.3 Парсинг документов
 
@@ -192,7 +212,7 @@ CREATE TABLE chunks (
   content     TEXT NOT NULL,
   token_count INTEGER,
   page_number INTEGER,
-  embedding   vector,  -- размер зависит от провайдера
+  embedding   vector,  -- размерность настраивается (см. settings.embedding_dimensions)
   is_active   BOOLEAN NOT NULL DEFAULT true,
   deactivated_by  UUID REFERENCES users(id),
   deactivated_at  TIMESTAMPTZ,
@@ -748,21 +768,41 @@ services:
 ### 12.2 Переменные окружения (API)
 
 ```env
+# === Database & Cache ===
 DATABASE_URL=postgresql://user:pass@postgres:5432/ragdb
 REDIS_URL=redis://redis:6379
+
+# === Security ===
 JWT_SECRET=<secret>
 JWT_REFRESH_SECRET=<secret>
+
+# === Storage (S3-compatible) ===
 S3_ENDPOINT=https://s3.amazonaws.com
 S3_BUCKET=rag-documents
 S3_ACCESS_KEY=...
 S3_SECRET_KEY=...
-AI_PROVIDER=openai          # openai | anthropic
-OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=...
+
+# === AI Provider (универсальная конфигурация) ===
+# Вариант 1: Cloud SaaS (OpenAI, Anthropic, Google)
+AI_PROVIDER=openai
+AI_API_KEY=sk-...
+
+# Вариант 2: OpenAI-compatible endpoint (vLLM, Ollama, LocalAI)
+# AI_PROVIDER=custom
+# AI_ENDPOINT_URL=https://your-ai-server.com/v1
+# AI_API_KEY=...
+
+# === AI Models (настраиваемо) ===
 AI_EMBEDDING_MODEL=text-embedding-3-small
 AI_COMPLETION_MODEL=gpt-4o-mini
+AI_EMBEDDING_DIMENSIONS=1536    # критично: должно соответствовать модели
 AI_COMPLETION_TEMPERATURE=0.3
+
+# === Logging ===
+LOG_LEVEL=info
 ```
+
+**Важно:** При смене `AI_EMBEDDING_MODEL` на модель с другой размерностью требуется переиндексация всех документов.
 
 ### 12.3 Миграции
 
