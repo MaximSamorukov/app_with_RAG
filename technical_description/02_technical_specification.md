@@ -1,7 +1,7 @@
 # RAG Assistant — Техническое задание
 
-> **Версия:** 1.0 · Март 2026  
-> **Статус:** Draft
+> **Версия:** 1.1 · Март 2026  
+> **Статус:** Draft — обновлено по результатам анализа tech_spec_questions_20_03_2026
 
 ---
 
@@ -11,6 +11,8 @@
 2. [Архитектура системы](#2-архитектура-системы)
 3. [Стек технологий](#3-стек-технологий)
 4. [Структура базы данных](#4-структура-базы-данных)
+   - 4.10 [Таблица `settings`](#410-таблица-settings) *(добавлено)*
+   - 4.11 [Триггеры `updated_at`](#411-триггеры-updated_at) *(добавлено)*
 5. [API-контракты](#5-api-контракты)
 6. [RAG-пайплайн](#6-rag-пайплайн)
 7. [Модуль аутентификации и авторизации](#7-модуль-аутентификации-и-авторизации)
@@ -234,10 +236,14 @@ CREATE TABLE chat_sessions (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title       VARCHAR(500),
+  is_active   BOOLEAN NOT NULL DEFAULT true,   -- только одна активная на пользователя
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_chat_sessions_user_id ON chat_sessions(user_id);
+CREATE UNIQUE INDEX idx_chat_sessions_active_user
+  ON chat_sessions(user_id)
+  WHERE is_active = true;   -- гарантирует не более 1 активной сессии на пользователя
 ```
 
 ### 4.8 Таблица `chat_messages`
@@ -274,6 +280,55 @@ CREATE TABLE query_logs (
 );
 CREATE INDEX idx_query_logs_created_at ON query_logs(created_at DESC);
 CREATE INDEX idx_query_logs_user_id    ON query_logs(user_id);
+```
+
+### 4.10 Таблица `settings`
+
+Хранит системные настройки (AI-провайдер, webhook и т.д.) в формате ключ–значение.
+
+```sql
+CREATE TABLE settings (
+  key        VARCHAR(100) PRIMARY KEY,
+  value      JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by UUID REFERENCES users(id)
+);
+```
+
+Примеры ключей: `ai_provider`, `ai_completion_model`, `ai_embedding_model`, `ai_temperature`, `webhook_url`, `webhook_events`.
+
+### 4.11 Триггеры `updated_at`
+
+Для поддержания актуальности поля `updated_at` создаётся общая функция и триггеры на все соответствующие таблицы:
+
+```sql
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER update_documents_updated_at
+  BEFORE UPDATE ON documents
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER update_instructions_updated_at
+  BEFORE UPDATE ON instructions
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER update_chat_sessions_updated_at
+  BEFORE UPDATE ON chat_sessions
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER update_settings_updated_at
+  BEFORE UPDATE ON settings
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 ```
 
 ---
@@ -362,6 +417,14 @@ GET    /api/v1/analytics/query-logs    — журнал запросов с фи
 GET    /api/v1/analytics/query-logs/export  — Content-Type: text/csv
 ```
 
+### 5.7 Настройки (admin only)
+
+```
+GET    /api/v1/settings          — все настройки
+PATCH  /api/v1/settings          — обновить одну или несколько настроек
+POST   /api/v1/settings/test-connection  — тест соединения с AI-провайдером
+```
+
 ---
 
 ## 6. RAG-пайплайн
@@ -411,12 +474,17 @@ Vector similarity search в pgvector
   WHERE chunks.is_active = true
     AND documents.is_active = true
   ORDER BY embedding <=> query_embedding
-  LIMIT 5
-  WHERE similarity > 0.75   ← порог релевантности
+  LIMIT 20                              ← расширенный пул для реранкинга
+  WHERE similarity > 0.75   ← порог cosine similarity
       │
       ├── [нет результатов] → ответ «Информация не найдена в базе знаний»
       │
       ▼ [есть результаты]
+Cross-encoder реранкинг (top-20 → top-5)
+  Переоценка пар (вопрос, чанк) с точным relevance score
+  Выбираются 5 чанков с наивысшим score
+      │
+      ▼
 Формирование контекста из чанков
       │
       ▼
@@ -438,8 +506,9 @@ Vector similarity search в pgvector
 |----------|----------|-------------|
 | chunk_size | 512 токенов | Баланс контекста и релевантности |
 | chunk_overlap | 64 токена | Сохранение связности на границах |
-| top_k | 5 чанков | Ограничение размера контекста |
-| similarity_threshold | 0.75 | Порог cosine similarity |
+| vector_search_top_k | 20 чанков | Пул кандидатов для cross-encoder реранкинга |
+| rerank_top_k | 5 чанков | Финальный контекст после реранкинга |
+| similarity_threshold | 0.75 | Порог cosine similarity (pre-rerank фильтр) |
 
 ---
 
@@ -481,9 +550,33 @@ router.post('/sessions/:id/messages', authenticate, chatController.sendMessage);
 
 ### 8.2 Processing worker
 
+Обработка разделена на две очереди в зависимости от «веса» документа:
+
+| Очередь | Форматы | Concurrency | Описание |
+|---------|---------|-------------|----------|
+| `document-processing:heavy` | PDF, DOCX | 2 | Тяжёлые документы, ресурсоёмкий парсинг |
+| `document-processing:light` | MD, TXT | 10 | Лёгкие документы, быстрое чтение |
+
 ```typescript
 // worker/documentProcessor.ts
-queue.process('document-processing', 5, async (job) => {
+
+// Очередь для тяжёлых форматов (PDF / DOCX)
+const heavyWorker = new Worker('document-processing:heavy', processDocument, {
+  connection: redisConnection,
+  concurrency: 2,
+  stalledInterval: 30000,   // проверка зависших каждые 30 сек
+  maxStalledCount: 3,       // после 3 зависаний — перевод в error
+});
+
+// Очередь для лёгких форматов (MD / TXT)
+const lightWorker = new Worker('document-processing:light', processDocument, {
+  connection: redisConnection,
+  concurrency: 10,
+  stalledInterval: 30000,
+  maxStalledCount: 3,
+});
+
+async function processDocument(job: Job) {
   const { documentId } = job.data;
   // 1. Скачать из S3 в память (stream)
   // 2. Извлечь текст
@@ -491,7 +584,16 @@ queue.process('document-processing', 5, async (job) => {
   // 4. Батчевые эмбеддинги
   // 5. Bulk insert chunks
   // 6. Обновить status → 'indexed'
-});
+}
+```
+
+**Маршрутизация при постановке задачи:**
+
+```typescript
+const queue = ['pdf', 'docx'].includes(format)
+  ? 'document-processing:heavy'
+  : 'document-processing:light';
+await bullQueue(queue).add('process', { documentId });
 ```
 
 ### 8.3 Статусы документа и переходы
@@ -502,6 +604,22 @@ pending → processing → indexed
 ```
 
 Максимум 3 автоматические попытки с backoff (1 мин, 3 мин, 6 мин).
+
+### 8.4 Обработка зависших задач (stalled jobs)
+
+| Параметр | Значение | Описание |
+|----------|----------|----------|
+| `stalledInterval` | 30 000 мс | Интервал проверки зависших задач |
+| `maxStalledCount` | 3 | Максимум зависаний до перевода в `error` |
+| Cron-задача | каждые 5 мин | Явный сброс задач, застрявших в `processing` > 15 мин |
+
+Cron-задача выполняет:
+```sql
+UPDATE documents
+SET status = 'error', error_message = 'Worker timeout'
+WHERE status = 'processing'
+  AND updated_at < NOW() - INTERVAL '15 minutes';
+```
 
 ---
 
