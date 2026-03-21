@@ -1,0 +1,39 @@
+import { z } from 'zod';
+import { UserRole } from '../../../database/entities/User.entity';
+
+/**
+ * Password validation regex:
+ * - Minimum 8 characters
+ * - At least 1 uppercase letter
+ * - At least 1 digit
+ */
+const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d\W]{8,}$/;
+
+/**
+ * Update user validation schema
+ * All fields are optional for partial updates
+ */
+export const updateUserSchema = z.object({
+  email: z
+    .string()
+    .email('Invalid email address')
+    .min(1, 'Email is required')
+    .max(255, 'Email must be less than 255 characters')
+    .optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(passwordRegex, 'Password must contain at least one uppercase letter and one digit')
+    .optional(),
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters')
+    .trim()
+    .optional(),
+  role: z.nativeEnum(UserRole).optional(),
+  isActive: z.boolean().optional(),
+  isEmailVerified: z.boolean().optional(),
+});
+
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;
