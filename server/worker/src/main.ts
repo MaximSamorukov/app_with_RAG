@@ -8,10 +8,10 @@ dotenv.config();
 
 // Queue names
 export enum QueueName {
-  DOCUMENT_PARSE = 'document:parse',
-  DOCUMENT_CHUNK = 'document:chunk',
-  DOCUMENT_EMBED = 'document:embed',
-  DOCUMENT_UPSERT = 'document:upsert',
+  DOCUMENT_PARSE = 'document_parse',
+  DOCUMENT_CHUNK = 'document_chunk',
+  DOCUMENT_EMBED = 'document_embed',
+  DOCUMENT_UPSERT = 'document_upsert',
 }
 
 // Connection configuration
