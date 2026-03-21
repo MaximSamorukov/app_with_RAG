@@ -87,7 +87,7 @@ interface TestResult {
  * Load and validate environment variables
  */
 function loadEnvConfig(): S3Config {
-  const envPath = join(PROJECT_ROOT, '.env');
+  const envPath = join(PROJECT_ROOT, '..', '.env');
   
   if (!fs.existsSync(envPath)) {
     throw new Error(`.env file not found at ${envPath}`);

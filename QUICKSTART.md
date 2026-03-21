@@ -105,7 +105,10 @@ The script will:
 
 ```bash
 cd server
-npx tsx scripts/test-s3-connection.ts
+npm run test:s3
+
+# Or directly
+npx tsx server/scripts/test-s3-connection.ts
 ```
 
 ### Step 5: Start Development Servers
@@ -259,7 +262,10 @@ Expected response:
 
 ```bash
 cd server
-npx tsx scripts/test-s3-connection.ts
+npm run test:s3
+
+# Or directly
+npx tsx server/scripts/test-s3-connection.ts
 ```
 
 ---

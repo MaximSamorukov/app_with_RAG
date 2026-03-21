@@ -270,7 +270,12 @@ npm run dev
 |--------|------|---------|
 | `phase0-start.sh` | `scripts/phase0-start.sh` | Complete Phase 0 startup |
 | `stop.sh` | `scripts/stop.sh` | Complete shutdown |
-| `test-s3-connection.ts` | `scripts/test-s3-connection.ts` | Test S3 connectivity |
+
+### Server Scripts
+
+| Script | Path | Purpose |
+|--------|------|---------|
+| `test-s3-connection.ts` | `server/scripts/test-s3-connection.ts` | Test S3 connectivity |
 
 ---
 

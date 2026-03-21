@@ -62,6 +62,7 @@ npm run migration:run
 
 # Test S3 connection
 cd server && npm run test:s3
+# Or: npx tsx server/scripts/test-s3-connection.ts
 ```
 
 ## 📋 Key URLs
