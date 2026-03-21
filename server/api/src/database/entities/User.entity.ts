@@ -5,7 +5,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  Index,
 } from 'typeorm';
 import { RefreshToken } from './RefreshToken.entity';
 import { Document } from './Document.entity';
@@ -21,13 +20,13 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, select: false })
-  password: string;
+  @Column({ name: 'password_hash', type: 'varchar', length: 255, select: false })
+  passwordHash: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
   @Column({
@@ -52,13 +51,9 @@ export class User {
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
 
-  @OneToMany(() => Document, (document) => document.createdBy)
+  @OneToMany(() => Document, (document) => document.uploadedBy)
   documents: Document[];
 
   @OneToMany(() => ChatSession, (chatSession) => chatSession.user)
   chatSessions: ChatSession[];
-
-  @Index()
-  @Column({ type: 'varchar', length: 255, unique: true })
-  emailUnique: string;
 }

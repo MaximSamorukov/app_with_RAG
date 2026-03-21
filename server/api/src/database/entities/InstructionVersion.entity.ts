@@ -13,11 +13,11 @@ export class InstructionVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'integer' })
-  version: number;
+  @Column({ name: 'version_number', type: 'integer' })
+  versionNumber: number;
 
-  @Column({ type: 'text' })
-  systemPrompt: string;
+  @Column({ name: 'content', type: 'text' })
+  content: string;
 
   @Column({ type: 'text', nullable: true })
   changes: string | null;

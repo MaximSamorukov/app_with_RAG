@@ -5,7 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { User } from './User.entity';
 import { InstructionVersion } from './InstructionVersion.entity';
 
 @Entity('instructions')
@@ -17,7 +20,7 @@ export class Instruction {
   name: string;
 
   @Column({ type: 'text' })
-  description: string;
+  content: string;
 
   @Column({ type: 'boolean', default: false })
   isActive: boolean;
@@ -30,6 +33,13 @@ export class Instruction {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
+
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  createdBy: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'created_by' })
+  createdByUser: User | null;
 
   @OneToMany(
     () => InstructionVersion,

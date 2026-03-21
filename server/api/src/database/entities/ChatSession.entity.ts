@@ -45,7 +45,7 @@ export class ChatSession {
   @Index()
   userId: string;
 
-  @OneToMany(() => ChatMessage, (message) => message.chatSession, {
+  @OneToMany(() => ChatMessage, (message) => message.session, {
     cascade: true,
   })
   messages: ChatMessage[];

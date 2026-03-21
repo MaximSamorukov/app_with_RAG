@@ -5,7 +5,9 @@ export class InitialSchema1710000000000 implements MigrationInterface {
     // Enable pgvector extension
     await queryRunner.query('CREATE EXTENSION IF NOT EXISTS vector');
 
+    // ==========================================
     // Create users table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'users',
@@ -21,32 +23,28 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             name: 'email',
             type: 'varchar',
             length: '255',
-          },
-          {
-            name: 'password',
-            type: 'varchar',
-            length: '255',
+            isUnique: true,
           },
           {
             name: 'name',
             type: 'varchar',
-            length: '100',
+            length: '255',
+          },
+          {
+            name: 'password_hash',
+            type: 'varchar',
+            length: '255',
           },
           {
             name: 'role',
-            type: 'enum',
-            enum: ['admin', 'user'],
+            type: 'varchar',
+            length: '20',
             default: "'user'",
           },
           {
             name: 'is_active',
             type: 'boolean',
             default: true,
-          },
-          {
-            name: 'last_login_at',
-            type: 'timestamptz',
-            isNullable: true,
           },
           {
             name: 'created_at',
@@ -59,26 +57,18 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'CURRENT_TIMESTAMP',
           },
           {
-            name: 'email_unique',
-            type: 'varchar',
-            length: '255',
+            name: 'last_login_at',
+            type: 'timestamptz',
+            isNullable: true,
           },
         ],
       }),
       true
     );
 
-    // Create index on users.email_unique
-    await queryRunner.createIndex(
-      'users',
-      new TableIndex({
-        name: 'IDX_USERS_EMAIL_UNIQUE',
-        columnNames: ['email_unique'],
-        isUnique: true,
-      })
-    );
-
+    // ==========================================
     // Create refresh_tokens table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'refresh_tokens',
@@ -91,50 +81,42 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
-            name: 'token',
+            name: 'user_id',
+            type: 'uuid',
+          },
+          {
+            name: 'token_hash',
             type: 'varchar',
-            length: '500',
+            length: '255',
           },
           {
             name: 'expires_at',
             type: 'timestamptz',
           },
           {
-            name: 'revoked_at',
-            type: 'timestamptz',
-            isNullable: true,
-          },
-          {
-            name: 'revoked_reason',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
-          },
-          {
-            name: 'fingerprint',
-            type: 'varchar',
-            length: '45',
-          },
-          {
             name: 'created_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'user_id',
-            type: 'uuid',
           },
         ],
       }),
       true
     );
 
-    // Create index on refresh_tokens.fingerprint
+    // Create indexes on refresh_tokens
     await queryRunner.createIndex(
       'refresh_tokens',
       new TableIndex({
-        name: 'IDX_REFRESH_TOKENS_FINGERPRINT',
-        columnNames: ['fingerprint'],
+        name: 'IDX_REFRESH_TOKENS_USER_ID',
+        columnNames: ['user_id'],
+      })
+    );
+
+    await queryRunner.createIndex(
+      'refresh_tokens',
+      new TableIndex({
+        name: 'IDX_REFRESH_TOKENS_EXPIRES_AT',
+        columnNames: ['expires_at'],
       })
     );
 
@@ -150,7 +132,9 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       })
     );
 
+    // ==========================================
     // Create documents table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'documents',
@@ -163,42 +147,40 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
-            name: 'title',
+            name: 'name',
             type: 'varchar',
-            length: '255',
+            length: '500',
           },
           {
-            name: 'original_name',
+            name: 'description',
             type: 'text',
+            isNullable: true,
           },
           {
-            name: 'type',
-            type: 'enum',
-            enum: ['pdf', 'docx', 'md', 'txt'],
-          },
-          {
-            name: 'size',
-            type: 'bigint',
-          },
-          {
-            name: 'mime_type',
+            name: 'format',
             type: 'varchar',
-            length: '255',
+            length: '20',
           },
           {
             name: 's3_key',
             type: 'varchar',
-            length: '500',
+            length: '1000',
           },
           {
-            name: 's3_bucket',
-            type: 'varchar',
-            length: '500',
+            name: 'size_bytes',
+            type: 'bigint',
+            isNullable: true,
+          },
+          {
+            name: 'tags',
+            type: 'text',
+            default: "'{}'",
+            isArray: true,
           },
           {
             name: 'status',
-            type: 'enum',
-            enum: ['pending', 'processing', 'completed', 'failed'],
+            type: 'varchar',
+            length: '30',
             default: "'pending'",
           },
           {
@@ -207,13 +189,13 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             isNullable: true,
           },
           {
-            name: 'chunk_count',
-            type: 'int',
-            default: 0,
+            name: 'is_active',
+            type: 'boolean',
+            default: true,
           },
           {
-            name: 'processed_at',
-            type: 'timestamptz',
+            name: 'uploaded_by',
+            type: 'uuid',
             isNullable: true,
           },
           {
@@ -225,16 +207,6 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             name: 'updated_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'created_by',
-            type: 'uuid',
-          },
-          {
-            name: 'fingerprint',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
           },
         ],
       }),
@@ -253,24 +225,26 @@ export class InitialSchema1710000000000 implements MigrationInterface {
     await queryRunner.createIndex(
       'documents',
       new TableIndex({
-        name: 'IDX_DOCUMENTS_FINGERPRINT',
-        columnNames: ['fingerprint'],
+        name: 'IDX_DOCUMENTS_TAGS',
+        columnNames: ['tags'],
       })
     );
 
-    // Create foreign key for documents.created_by
+    // Create foreign key for documents.uploaded_by
     await queryRunner.createForeignKey(
       'documents',
       new TableForeignKey({
         name: 'FK_DOCUMENTS_USER',
-        columnNames: ['created_by'],
+        columnNames: ['uploaded_by'],
         referencedTableName: 'users',
         referencedColumnNames: ['id'],
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
       })
     );
 
+    // ==========================================
     // Create chunks table with pgvector
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'chunks',
@@ -283,29 +257,45 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
+            name: 'document_id',
+            type: 'uuid',
+          },
+          {
+            name: 'chunk_index',
+            type: 'integer',
+          },
+          {
             name: 'content',
             type: 'text',
           },
           {
-            name: 'position',
+            name: 'token_count',
             type: 'integer',
+            isNullable: true,
           },
           {
-            name: 'start_offset',
+            name: 'page_number',
             type: 'integer',
-          },
-          {
-            name: 'end_offset',
-            type: 'integer',
+            isNullable: true,
           },
           {
             name: 'embedding',
             type: 'vector',
-            length: '1536',
+            isNullable: true,
           },
           {
-            name: 'embedding_distance',
-            type: 'float',
+            name: 'is_active',
+            type: 'boolean',
+            default: true,
+          },
+          {
+            name: 'deactivated_by',
+            type: 'uuid',
+            isNullable: true,
+          },
+          {
+            name: 'deactivated_at',
+            type: 'timestamptz',
             isNullable: true,
           },
           {
@@ -313,39 +303,24 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
           },
-          {
-            name: 'updated_at',
-            type: 'timestamptz',
-            default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'document_id',
-            type: 'uuid',
-          },
-          {
-            name: 'metadata',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
-          },
         ],
       }),
       true
     );
 
-    // Create index on chunks.document_id
+    // Create indexes on chunks
     await queryRunner.createIndex(
       'chunks',
       new TableIndex({
-        name: 'IDX_CHUNKS_DOCUMENT',
+        name: 'IDX_CHUNKS_DOCUMENT_ID',
         columnNames: ['document_id'],
       })
     );
 
-    // Create HNSW index for vector similarity search (using ivfflat for compatibility)
+    // Create HNSW index for vector similarity search
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_chunks_embedding 
-      ON chunks USING ivfflat (embedding vector_cosine_ops) 
+      CREATE INDEX IF NOT EXISTS idx_chunks_embedding
+      ON chunks USING hnsw (embedding vector_cosine_ops)
       WITH (lists = 100)
     `);
 
@@ -361,7 +336,21 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       })
     );
 
+    // Create foreign key for chunks.deactivated_by
+    await queryRunner.createForeignKey(
+      'chunks',
+      new TableForeignKey({
+        name: 'FK_CHUNKS_DEACTIVATED_BY_USER',
+        columnNames: ['deactivated_by'],
+        referencedTableName: 'users',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      })
+    );
+
+    // ==========================================
     // Create instructions table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'instructions',
@@ -379,7 +368,7 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             length: '255',
           },
           {
-            name: 'description',
+            name: 'content',
             type: 'text',
           },
           {
@@ -388,8 +377,8 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: false,
           },
           {
-            name: 'activated_at',
-            type: 'timestamptz',
+            name: 'created_by',
+            type: 'uuid',
             isNullable: true,
           },
           {
@@ -407,7 +396,21 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       true
     );
 
+    // Create foreign key for instructions.created_by
+    await queryRunner.createForeignKey(
+      'instructions',
+      new TableForeignKey({
+        name: 'FK_INSTRUCTIONS_USER',
+        columnNames: ['created_by'],
+        referencedTableName: 'users',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      })
+    );
+
+    // ==========================================
     // Create instruction_versions table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'instruction_versions',
@@ -420,32 +423,21 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
-            name: 'version',
+            name: 'instruction_id',
+            type: 'uuid',
+          },
+          {
+            name: 'content',
+            type: 'text',
+          },
+          {
+            name: 'version_number',
             type: 'integer',
-          },
-          {
-            name: 'system_prompt',
-            type: 'text',
-          },
-          {
-            name: 'changes',
-            type: 'text',
-            isNullable: true,
-          },
-          {
-            name: 'changed_by',
-            type: 'varchar',
-            length: '100',
-            isNullable: true,
           },
           {
             name: 'created_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'instruction_id',
-            type: 'uuid',
           },
         ],
       }),
@@ -464,7 +456,9 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       })
     );
 
+    // ==========================================
     // Create chat_sessions table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'chat_sessions',
@@ -477,24 +471,19 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
+            name: 'user_id',
+            type: 'uuid',
+          },
+          {
             name: 'title',
             type: 'varchar',
-            length: '255',
+            length: '500',
+            isNullable: true,
           },
           {
             name: 'is_active',
             type: 'boolean',
             default: true,
-          },
-          {
-            name: 'message_count',
-            type: 'integer',
-            default: 0,
-          },
-          {
-            name: 'last_message_at',
-            type: 'timestamptz',
-            isNullable: true,
           },
           {
             name: 'created_at',
@@ -506,21 +495,26 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
           },
-          {
-            name: 'user_id',
-            type: 'uuid',
-          },
         ],
       }),
       true
     );
 
-    // Create unique index on chat_sessions (user_id, is_active) for single active session
+    // Create index on chat_sessions.user_id
     await queryRunner.createIndex(
       'chat_sessions',
       new TableIndex({
-        name: 'IDX_CHAT_SESSIONS_USER_ACTIVE',
-        columnNames: ['user_id', 'is_active'],
+        name: 'IDX_CHAT_SESSIONS_USER_ID',
+        columnNames: ['user_id'],
+      })
+    );
+
+    // Create unique index for single active session per user
+    await queryRunner.createIndex(
+      'chat_sessions',
+      new TableIndex({
+        name: 'IDX_CHAT_SESSIONS_ACTIVE_USER',
+        columnNames: ['user_id'],
         isUnique: true,
         where: 'is_active = true',
       })
@@ -538,7 +532,9 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       })
     );
 
+    // ==========================================
     // Create chat_messages table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'chat_messages',
@@ -551,65 +547,68 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
+            name: 'session_id',
+            type: 'uuid',
+          },
+          {
             name: 'role',
-            type: 'enum',
-            enum: ['user', 'assistant'],
+            type: 'varchar',
+            length: '20',
           },
           {
             name: 'content',
             type: 'text',
           },
           {
-            name: 'metadata',
-            type: 'jsonb',
+            name: 'source_chunks',
+            type: 'uuid',
+            isArray: true,
             isNullable: true,
           },
           {
-            name: 'sources',
-            type: 'jsonb',
-            isNullable: true,
-          },
-          {
-            name: 'position',
+            name: 'latency_ms',
             type: 'integer',
             isNullable: true,
+          },
+          {
+            name: 'message_count',
+            type: 'integer',
+            default: 0,
           },
           {
             name: 'created_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
           },
-          {
-            name: 'chat_session_id',
-            type: 'uuid',
-          },
         ],
       }),
       true
     );
 
-    // Create index on chat_messages.chat_session_id
+    // Create index on chat_messages.session_id
     await queryRunner.createIndex(
       'chat_messages',
       new TableIndex({
-        name: 'IDX_CHAT_MESSAGES_SESSION',
-        columnNames: ['chat_session_id'],
+        name: 'IDX_CHAT_MESSAGES_SESSION_ID',
+        columnNames: ['session_id'],
       })
     );
 
-    // Create foreign key for chat_messages.chat_session_id
+    // Create foreign key for chat_messages.session_id
     await queryRunner.createForeignKey(
       'chat_messages',
       new TableForeignKey({
         name: 'FK_CHAT_MESSAGES_SESSION',
-        columnNames: ['chat_session_id'],
+        columnNames: ['session_id'],
         referencedTableName: 'chat_sessions',
         referencedColumnNames: ['id'],
         onDelete: 'CASCADE',
       })
     );
 
+    // ==========================================
     // Create query_logs table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'query_logs',
@@ -622,12 +621,46 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             default: 'gen_random_uuid()',
           },
           {
-            name: 'query',
+            name: 'user_id',
+            type: 'uuid',
+            isNullable: true,
+          },
+          {
+            name: 'session_id',
+            type: 'uuid',
+            isNullable: true,
+          },
+          {
+            name: 'question',
             type: 'text',
           },
           {
-            name: 'response',
-            type: 'text',
+            name: 'chunk_ids',
+            type: 'uuid',
+            isArray: true,
+            isNullable: true,
+          },
+          {
+            name: 'similarity_scores',
+            type: 'float',
+            isArray: true,
+            isNullable: true,
+          },
+          {
+            name: 'provider',
+            type: 'varchar',
+            length: '50',
+            isNullable: true,
+          },
+          {
+            name: 'model',
+            type: 'varchar',
+            length: '100',
+            isNullable: true,
+          },
+          {
+            name: 'has_context',
+            type: 'boolean',
             isNullable: true,
           },
           {
@@ -636,137 +669,180 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             isNullable: true,
           },
           {
-            name: 'status',
-            type: 'enum',
-            enum: ['success', 'error'],
-            default: "'success'",
-          },
-          {
-            name: 'error_message',
-            type: 'text',
-            isNullable: true,
-          },
-          {
-            name: 'metadata',
-            type: 'jsonb',
-            isNullable: true,
-          },
-          {
             name: 'created_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'user_id',
-            type: 'uuid',
-            isNullable: true,
-          },
-          {
-            name: 'chat_session_id',
-            type: 'uuid',
-            isNullable: true,
           },
         ],
       }),
       true
     );
 
-    // Create indexes on query_logs
+    // Create DESC index on query_logs.created_at
     await queryRunner.createIndex(
       'query_logs',
       new TableIndex({
-        name: 'IDX_QUERY_LOGS_USER',
+        name: 'IDX_QUERY_LOGS_CREATED_AT',
+        columnNames: ['created_at'],
+      })
+    );
+
+    await queryRunner.createIndex(
+      'query_logs',
+      new TableIndex({
+        name: 'IDX_QUERY_LOGS_USER_ID',
         columnNames: ['user_id'],
       })
     );
 
+    // Create foreign keys for query_logs
+    await queryRunner.createForeignKey(
+      'query_logs',
+      new TableForeignKey({
+        name: 'FK_QUERY_LOGS_USER',
+        columnNames: ['user_id'],
+        referencedTableName: 'users',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      })
+    );
+
+    await queryRunner.createForeignKey(
+      'query_logs',
+      new TableForeignKey({
+        name: 'FK_QUERY_LOGS_SESSION',
+        columnNames: ['session_id'],
+        referencedTableName: 'chat_sessions',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      })
+    );
+
+    // ==========================================
     // Create settings table
+    // ==========================================
     await queryRunner.createTable(
       new Table({
         name: 'settings',
         columns: [
           {
-            name: 'id',
-            type: 'uuid',
-            isPrimary: true,
-            generationStrategy: 'uuid',
-            default: 'gen_random_uuid()',
-          },
-          {
             name: 'key',
             type: 'varchar',
-            length: '255',
+            length: '100',
+            isPrimary: true,
           },
           {
             name: 'value',
-            type: 'text',
-          },
-          {
-            name: 'description',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
-          },
-          {
-            name: 'is_editable',
-            type: 'boolean',
-            default: true,
-          },
-          {
-            name: 'created_at',
-            type: 'timestamptz',
-            default: 'CURRENT_TIMESTAMP',
+            type: 'jsonb',
           },
           {
             name: 'updated_at',
             type: 'timestamptz',
             default: 'CURRENT_TIMESTAMP',
           },
+          {
+            name: 'updated_by',
+            type: 'uuid',
+            isNullable: true,
+          },
         ],
       }),
       true
     );
 
-    // Create unique index on settings.key
-    await queryRunner.createIndex(
+    // Create foreign key for settings.updated_by
+    await queryRunner.createForeignKey(
       'settings',
-      new TableIndex({
-        name: 'IDX_SETTINGS_KEY',
-        columnNames: ['key'],
-        isUnique: true,
+      new TableForeignKey({
+        name: 'FK_SETTINGS_USER',
+        columnNames: ['updated_by'],
+        referencedTableName: 'users',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
       })
     );
+
+    // ==========================================
+    // Create set_updated_at() function
+    // ==========================================
+    await queryRunner.query(`
+      CREATE OR REPLACE FUNCTION set_updated_at()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    // ==========================================
+    // Create triggers for updated_at
+    // ==========================================
+    await queryRunner.query(`
+      CREATE TRIGGER update_users_updated_at
+        BEFORE UPDATE ON users
+        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    `);
+
+    await queryRunner.query(`
+      CREATE TRIGGER update_documents_updated_at
+        BEFORE UPDATE ON documents
+        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    `);
+
+    await queryRunner.query(`
+      CREATE TRIGGER update_instructions_updated_at
+        BEFORE UPDATE ON instructions
+        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    `);
+
+    await queryRunner.query(`
+      CREATE TRIGGER update_chat_sessions_updated_at
+        BEFORE UPDATE ON chat_sessions
+        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    `);
+
+    await queryRunner.query(`
+      CREATE TRIGGER update_settings_updated_at
+        BEFORE UPDATE ON settings
+        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Drop settings table
+    // Drop triggers
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_settings_updated_at ON settings');
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_chat_sessions_updated_at ON chat_sessions');
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_instructions_updated_at ON instructions');
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_documents_updated_at ON documents');
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_users_updated_at ON users');
+
+    // Drop set_updated_at function
+    await queryRunner.query('DROP FUNCTION IF EXISTS set_updated_at()');
+
+    // Drop foreign keys
+    await queryRunner.dropForeignKey('settings', 'FK_SETTINGS_USER');
+    await queryRunner.dropForeignKey('query_logs', 'FK_QUERY_LOGS_SESSION');
+    await queryRunner.dropForeignKey('query_logs', 'FK_QUERY_LOGS_USER');
+    await queryRunner.dropForeignKey('chat_messages', 'FK_CHAT_MESSAGES_SESSION');
+    await queryRunner.dropForeignKey('chat_sessions', 'FK_CHAT_SESSIONS_USER');
+    await queryRunner.dropForeignKey('instruction_versions', 'FK_INSTRUCTION_VERSIONS_INSTRUCTION');
+    await queryRunner.dropForeignKey('instructions', 'FK_INSTRUCTIONS_USER');
+    await queryRunner.dropForeignKey('chunks', 'FK_CHUNKS_DEACTIVATED_BY_USER');
+    await queryRunner.dropForeignKey('chunks', 'FK_CHUNKS_DOCUMENT');
+    await queryRunner.dropForeignKey('documents', 'FK_DOCUMENTS_USER');
+    await queryRunner.dropForeignKey('refresh_tokens', 'FK_REFRESH_TOKENS_USER');
+
+    // Drop tables in reverse order
     await queryRunner.dropTable('settings');
-
-    // Drop query_logs table
     await queryRunner.dropTable('query_logs');
-
-    // Drop chat_messages table
     await queryRunner.dropTable('chat_messages');
-
-    // Drop chat_sessions table
     await queryRunner.dropTable('chat_sessions');
-
-    // Drop instruction_versions table
     await queryRunner.dropTable('instruction_versions');
-
-    // Drop instructions table
     await queryRunner.dropTable('instructions');
-
-    // Drop chunks table
     await queryRunner.dropTable('chunks');
-
-    // Drop documents table
     await queryRunner.dropTable('documents');
-
-    // Drop refresh_tokens table
     await queryRunner.dropTable('refresh_tokens');
-
-    // Drop users table
     await queryRunner.dropTable('users');
 
     // Drop pgvector extension

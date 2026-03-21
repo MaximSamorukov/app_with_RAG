@@ -31,8 +31,11 @@ export class ChatMessage {
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, unknown> | null;
 
-  @Column({ type: 'jsonb', nullable: true })
-  sources: Record<string, unknown>[] | null;
+  @Column({ name: 'source_chunks', type: 'uuid', array: true, nullable: true })
+  sourceChunks: string[] | null;
+
+  @Column({ name: 'latency_ms', type: 'integer', nullable: true })
+  latencyMs: number | null;
 
   @Column({ type: 'integer', nullable: true })
   position: number;
@@ -40,13 +43,13 @@ export class ChatMessage {
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @ManyToOne(() => ChatSession, (chatSession) => chatSession.messages, {
+  @ManyToOne(() => ChatSession, (session) => session.messages, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'chat_session_id' })
-  chatSession: ChatSession;
+  @JoinColumn({ name: 'session_id' })
+  session: ChatSession;
 
-  @Column({ name: 'chat_session_id' })
+  @Column({ name: 'session_id' })
   @Index()
-  chatSessionId: string;
+  sessionId: string;
 }

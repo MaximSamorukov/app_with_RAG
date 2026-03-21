@@ -15,15 +15,8 @@ import { Chunk } from './Chunk.entity';
 export enum DocumentStatus {
   PENDING = 'pending',
   PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-}
-
-export enum DocumentType {
-  PDF = 'pdf',
-  DOCX = 'docx',
-  MD = 'md',
-  TXT = 'txt',
+  INDEXED = 'indexed',
+  ERROR = 'error',
 }
 
 @Entity('documents')
@@ -31,17 +24,17 @@ export class Document {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  title: string;
+  @Column({ type: 'varchar', length: 500 })
+  name: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
+
+  @Column({ type: 'varchar', length: 255 })
   originalName: string;
 
-  @Column({
-    type: 'enum',
-    enum: DocumentType,
-  })
-  type: DocumentType;
+  @Column({ type: 'varchar', length: 20 })
+  format: string;
 
   @Column({ type: 'bigint' })
   size: number;
@@ -49,7 +42,7 @@ export class Document {
   @Column({ type: 'varchar', length: 255 })
   mimeType: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 1000 })
   s3Key: string;
 
   @Column({ type: 'varchar', length: 500 })
@@ -72,6 +65,12 @@ export class Document {
   @Column({ type: 'timestamptz', nullable: true })
   processedAt: Date | null;
 
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
+
+  @Column({ type: 'text', array: true, default: () => "'{}'" })
+  tags: string[];
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
@@ -79,11 +78,11 @@ export class Document {
   updatedAt: Date;
 
   @ManyToOne(() => User, (user) => user.documents, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'created_by' })
-  createdBy: User;
+  @JoinColumn({ name: 'uploaded_by' })
+  uploadedBy: User;
 
-  @Column({ name: 'created_by' })
-  createdById: string;
+  @Column({ name: 'uploaded_by' })
+  uploadedById: string;
 
   @OneToMany(() => Chunk, (chunk) => chunk.document, {
     cascade: true,

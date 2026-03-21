@@ -1,29 +1,34 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { User } from './User.entity';
 
 @Entity('settings')
 export class Setting {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'varchar', length: 255, unique: true })
-  @Index()
+  @PrimaryColumn({ type: 'varchar', length: 100 })
   key: string;
 
-  @Column({ type: 'text' })
-  value: string;
+  @Column({ name: 'value', type: 'jsonb' })
+  value: Record<string, unknown>;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   description: string | null;
 
   @Column({ type: 'boolean', default: true })
   isEditable: boolean;
+
+  @Column({ name: 'updated_by', type: 'uuid', nullable: true })
+  updatedBy: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'updated_by' })
+  updatedByUser: User | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

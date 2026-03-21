@@ -1,6 +1,6 @@
 export { User, UserRole } from './User.entity';
 export { RefreshToken } from './RefreshToken.entity';
-export { Document, DocumentStatus, DocumentType } from './Document.entity';
+export { Document, DocumentStatus } from './Document.entity';
 export { Chunk } from './Chunk.entity';
 export { Instruction } from './Instruction.entity';
 export { InstructionVersion } from './InstructionVersion.entity';

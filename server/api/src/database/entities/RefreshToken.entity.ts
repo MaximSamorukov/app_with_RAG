@@ -14,9 +14,10 @@ export class RefreshToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 500 })
-  token: string;
+  @Column({ name: 'token_hash', type: 'varchar', length: 500 })
+  tokenHash: string;
 
+  @Index()
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 

@@ -20,8 +20,8 @@ export class QueryLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'text' })
-  query: string;
+  @Column({ name: 'question', type: 'text' })
+  question: string;
 
   @Column({ type: 'text', nullable: true })
   response: string | null;
@@ -39,6 +39,21 @@ export class QueryLog {
   @Column({ type: 'text', nullable: true })
   errorMessage: string | null;
 
+  @Column({ name: 'chunk_ids', type: 'uuid', array: true, nullable: true })
+  chunkIds: string[] | null;
+
+  @Column({ name: 'similarity_scores', type: 'float', array: true, nullable: true })
+  similarityScores: number[] | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  provider: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  model: string | null;
+
+  @Column({ name: 'has_context', type: 'boolean', nullable: true })
+  hasContext: boolean | null;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, unknown> | null;
 
@@ -54,9 +69,9 @@ export class QueryLog {
   userId: string | null;
 
   @ManyToOne(() => ChatSession, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'chat_session_id' })
-  chatSession: ChatSession | null;
+  @JoinColumn({ name: 'session_id' })
+  session: ChatSession | null;
 
-  @Column({ name: 'chat_session_id', nullable: true })
-  chatSessionId: string | null;
+  @Column({ name: 'session_id', nullable: true })
+  sessionId: string | null;
 }

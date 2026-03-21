@@ -18,8 +18,8 @@ export class Chunk {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'integer' })
-  position: number;
+  @Column({ name: 'chunk_index', type: 'integer' })
+  chunkIndex: number;
 
   @Column({ type: 'integer' })
   startOffset: number;
@@ -28,11 +28,26 @@ export class Chunk {
   endOffset: number;
 
   @Column({ type: 'vector', length: 1536 })
-  @Index({ synchronize: false }) // pgvector index managed separately
+  @Index()
   embedding: number[];
 
   @Column({ type: 'float', nullable: true })
   embeddingDistance: number | null;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
+
+  @Column({ name: 'deactivated_by', type: 'uuid', nullable: true })
+  deactivatedBy: string | null;
+
+  @Column({ name: 'deactivated_at', type: 'timestamptz', nullable: true })
+  deactivatedAt: Date | null;
+
+  @Column({ name: 'token_count', type: 'integer', nullable: true })
+  tokenCount: number | null;
+
+  @Column({ name: 'page_number', type: 'integer', nullable: true })
+  pageNumber: number | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
