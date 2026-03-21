@@ -17,6 +17,8 @@
     "stop": "./scripts/stop.sh"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

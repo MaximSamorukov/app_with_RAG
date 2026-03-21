@@ -20,7 +20,8 @@
     "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d src/database/data-source.ts",
     "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate -d src/database/data-source.ts src/database/migrations/$npm_config_name",
     "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/database/data-source.ts",
-    "migration:create": "tsx node_modules/typeorm/cli.js migration:create src/database/migrations/$npm_config_name"
+    "migration:create": "tsx node_modules/typeorm/cli.js migration:create src/database/migrations/$npm_config_name",
+    "db:seed": "tsx ../scripts/seed-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.478.0",

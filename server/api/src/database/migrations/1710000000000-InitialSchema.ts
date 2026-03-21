@@ -61,6 +61,11 @@ export class InitialSchema1710000000000 implements MigrationInterface {
             type: 'timestamptz',
             isNullable: true,
           },
+          {
+            name: 'is_email_verified',
+            type: 'boolean',
+            default: false,
+          },
         ],
       }),
       true
@@ -317,12 +322,11 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       })
     );
 
-    // Create HNSW index for vector similarity search
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_chunks_embedding
-      ON chunks USING hnsw (embedding vector_cosine_ops)
-      WITH (lists = 100)
-    `);
+    // Note: Vector index creation is deferred until data is present in the table
+    // To create the index manually after data is loaded, run:
+    // CREATE INDEX idx_chunks_embedding ON chunks USING ivfflat (embedding vector_cosine_ops);
+    // For pgvector >= 0.7.0, consider using hnsw for better performance:
+    // CREATE INDEX idx_chunks_embedding ON chunks USING hnsw (embedding vector_cosine_ops);
 
     // Create foreign key for chunks.document_id
     await queryRunner.createForeignKey(
