@@ -36,6 +36,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ type: 'boolean', default: false })
+  isEmailVerified: boolean;
+
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
