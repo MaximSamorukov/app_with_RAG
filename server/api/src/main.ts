@@ -1,8 +1,9 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import 'reflect-metadata';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import { AppDataSource } from './database/data-source';
-import { logger } from './common/middleware/logger';
+import { httpLogger } from './common/middleware/logger';
 import { errorMiddleware } from './common/middleware/error.middleware';
 import { healthRouter } from './modules/health/health.router';
 
@@ -19,7 +20,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(logger);
+app.use(httpLogger);
 
 // Routes
 app.use('/api/v1/health', healthRouter);

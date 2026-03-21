@@ -64,7 +64,7 @@ export class QueryLog {
   @JoinColumn({ name: 'user_id' })
   user: User | null;
 
-  @Column({ name: 'user_id', nullable: true })
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
   @Index()
   userId: string | null;
 
@@ -72,6 +72,6 @@ export class QueryLog {
   @JoinColumn({ name: 'session_id' })
   session: ChatSession | null;
 
-  @Column({ name: 'session_id', nullable: true })
+  @Column({ name: 'session_id', type: 'uuid', nullable: true })
   sessionId: string | null;
 }

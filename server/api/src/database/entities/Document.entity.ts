@@ -81,7 +81,8 @@ export class Document {
   @JoinColumn({ name: 'uploaded_by' })
   uploadedBy: User;
 
-  @Column({ name: 'uploaded_by' })
+  @Column({ name: 'uploaded_by', type: 'uuid' })
+  @Index()
   uploadedById: string;
 
   @OneToMany(() => Chunk, (chunk) => chunk.document, {

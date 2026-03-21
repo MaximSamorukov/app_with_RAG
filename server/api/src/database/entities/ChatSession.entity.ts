@@ -41,7 +41,7 @@ export class ChatSession {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'user_id', type: 'uuid' })
   @Index()
   userId: string;
 

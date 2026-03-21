@@ -49,7 +49,7 @@ export class ChatMessage {
   @JoinColumn({ name: 'session_id' })
   session: ChatSession;
 
-  @Column({ name: 'session_id' })
+  @Column({ name: 'session_id', type: 'uuid' })
   @Index()
   sessionId: string;
 }

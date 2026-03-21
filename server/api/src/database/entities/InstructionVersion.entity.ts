@@ -34,6 +34,6 @@ export class InstructionVersion {
   @JoinColumn({ name: 'instruction_id' })
   instruction: Instruction;
 
-  @Column({ name: 'instruction_id' })
+  @Column({ name: 'instruction_id', type: 'uuid' })
   instructionId: string;
 }

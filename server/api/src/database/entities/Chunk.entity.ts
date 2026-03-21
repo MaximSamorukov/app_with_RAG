@@ -61,7 +61,7 @@ export class Chunk {
   @JoinColumn({ name: 'document_id' })
   document: Document;
 
-  @Column({ name: 'document_id' })
+  @Column({ name: 'document_id', type: 'uuid' })
   @Index()
   documentId: string;
 
