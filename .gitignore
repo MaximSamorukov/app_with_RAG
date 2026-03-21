@@ -27,3 +27,5 @@ dist-ssr
 server/api/dist/
 server/worker/dist/
 server/node_modules/
+
+.env

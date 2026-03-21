@@ -769,7 +769,7 @@ services:
 
 ```env
 # === Database & Cache ===
-DATABASE_URL=postgresql://user:pass@postgres:5432/ragdb
+DATABASE_URL=postgresql://user:pass@postgres:5433/ragdb
 REDIS_URL=redis://redis:6379
 
 # === Security ===

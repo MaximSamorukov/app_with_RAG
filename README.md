@@ -175,7 +175,7 @@ docker-compose down
 | `NODE_ENV` | Environment mode | `development` |
 | `PORT` | API server port | `3000` |
 | `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_PORT` | PostgreSQL port | `5433` |
 | `DB_NAME` | Database name | `rag_assistant` |
 | `DB_USER` | Database user | `postgres` |
 | `DB_PASSWORD` | Database password | `postgres` |
@@ -309,7 +309,7 @@ npm run migration:run
 
 ### Port Already in Use
 
-If port 3000 or 5432 is already in use:
+If port 3000 or 5433 is already in use:
 
 ```bash
 # Find and kill the process

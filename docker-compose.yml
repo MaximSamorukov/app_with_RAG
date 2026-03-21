@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: rag_assistant
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -40,52 +40,30 @@ services:
     networks:
       - rag_network
 
-  # MinIO for S3-compatible object storage (development)
-  minio:
-    image: minio/minio:latest
-    container_name: rag_minio
-    restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - rag_network
-
   # API Server (Node.js + Express)
+  # Reads S3 configuration from .env file
   api:
     build:
       context: .
       dockerfile: server/api/Dockerfile
     container_name: rag_api
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
       PORT: 3000
+      # Database connection - use postgres service inside Docker network
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_NAME: rag_assistant
       DB_USER: postgres
       DB_PASSWORD: postgres
+      # Redis connection - use redis service inside Docker network
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      S3_ENDPOINT: http://minio:9000
-      S3_REGION: us-east-1
-      S3_BUCKET: rag-assistant-documents
-      S3_ACCESS_KEY_ID: minioadmin
-      S3_SECRET_ACCESS_KEY: minioadmin
-      S3_FORCE_PATH_STYLE: "true"
+      # S3 configuration - loaded from .env file
+      # S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_FORCE_PATH_STYLE
     ports:
       - "3000:3000"
     volumes:
@@ -96,34 +74,33 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     command: npm run dev
     networks:
       - rag_network
 
   # Background Worker (BullMQ)
+  # Reads S3 configuration from .env file
   worker:
     build:
       context: .
       dockerfile: server/worker/Dockerfile
     container_name: rag_worker
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
+      # Database connection - use postgres service inside Docker network
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_NAME: rag_assistant
       DB_USER: postgres
       DB_PASSWORD: postgres
+      # Redis connection - use redis service inside Docker network
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      S3_ENDPOINT: http://minio:9000
-      S3_REGION: us-east-1
-      S3_BUCKET: rag-assistant-documents
-      S3_ACCESS_KEY_ID: minioadmin
-      S3_SECRET_ACCESS_KEY: minioadmin
-      S3_FORCE_PATH_STYLE: "true"
+      # S3 configuration - loaded from .env file
+      # S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_FORCE_PATH_STYLE
     volumes:
       - ./server/worker:/app
       - /app/node_modules
@@ -131,8 +108,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     command: npm run dev
     networks:
@@ -142,8 +117,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  minio_data:
     driver: local
 
 networks:

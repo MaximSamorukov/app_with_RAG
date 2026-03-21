@@ -20,7 +20,8 @@
     "typecheck:worker": "cd worker && npm run typecheck",
     "migration:run": "cd api && npm run migration:run",
     "migration:generate": "cd api && npm run migration:generate",
-    "migration:revert": "cd api && npm run migration:revert"
+    "migration:revert": "cd api && npm run migration:revert",
+    "test:s3": "npx tsx scripts/test-s3-connection.ts"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -29,6 +30,11 @@
     "api",
     "worker"
   ],
+  "devDependencies": {
+    "dotenv": "^16.3.1",
+    "tsx": "^4.7.0",
+    "@aws-sdk/client-s3": "^3.478.0"
+  },
   "keywords": [
     "rag",
     "ai",
