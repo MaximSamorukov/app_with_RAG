@@ -18,7 +18,8 @@ export function errorMiddleware(
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
+  _next: NextFunction
 ) {
   const statusCode = 'statusCode' in err ? err.statusCode : 500;
   const message = err.message || 'Internal Server Error';

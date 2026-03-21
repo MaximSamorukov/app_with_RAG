@@ -7,7 +7,7 @@ export const healthRouter = Router();
  * GET /api/v1/health
  * Health check endpoint
  */
-healthRouter.get('/', async (req: Request, res: Response) => {
+healthRouter.get('/', async (_req: Request, res: Response) => {
   const healthStatus = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -43,7 +43,7 @@ healthRouter.get('/', async (req: Request, res: Response) => {
  * GET /api/v1/health/ready
  * Readiness check - verifies all dependencies are ready
  */
-healthRouter.get('/ready', async (req: Request, res: Response) => {
+healthRouter.get('/ready', async (_req: Request, res: Response) => {
   const readyStatus = {
     ready: true,
     timestamp: new Date().toISOString(),
@@ -74,7 +74,7 @@ healthRouter.get('/ready', async (req: Request, res: Response) => {
  * GET /api/v1/health/live
  * Liveness check - simple ping
  */
-healthRouter.get('/live', (req: Request, res: Response) => {
+healthRouter.get('/live', (_req: Request, res: Response) => {
   res.json({
     alive: true,
     timestamp: new Date().toISOString(),
